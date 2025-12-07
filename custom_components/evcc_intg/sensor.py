@@ -28,7 +28,11 @@ from .pyevcc_ha import SESSIONS_KEY_TOTAL
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_entity_cb: AddEntitiesCallback):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    add_entity_cb: AddEntitiesCallback,
+):
     _LOGGER.debug("SENSOR async_setup_entry")
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
@@ -58,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
         entity = EvccSensor(coordinator, description)
         entities.append(entity)
 
-    multi_loadpoint_config = len(coordinator._loadpoint) > 1 #or len(coordinator._vehicle) > 1
+    multi_loadpoint_config = len(coordinator._loadpoint) > 1  # or len(coordinator._vehicle) > 1
 
     # loadpoint sensors...
     for a_lp_key in coordinator._loadpoint:
@@ -74,14 +78,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
             if not lp_is_integrated or a_stub.integrated_supported:
                 # well - a hack to show any heating related loadpoints with temperature units...
                 # note: this will not change the label (that still show 'SOC')
-                force_celsius = lp_is_heating  and (
-                        a_stub.tag == Tag.EFFECTIVEPLANSOC or
-                        a_stub.tag == Tag.EFFECTIVELIMITSOC or
-                        a_stub.tag == Tag.LP_VEHICLESOC or
-                        a_stub.tag == Tag.LP_VEHICLELIMITSOC or
-                        a_stub.tag == Tag.VEHICLEMINSOC or
-                        a_stub.tag == Tag.VEHICLELIMITSOC or
-                        a_stub.tag == Tag.VEHICLEPLANSOC)
+                force_celsius = lp_is_heating and (
+                    a_stub.tag == Tag.EFFECTIVEPLANSOC
+                    or a_stub.tag == Tag.EFFECTIVELIMITSOC
+                    or a_stub.tag == Tag.LP_VEHICLESOC
+                    or a_stub.tag == Tag.LP_VEHICLELIMITSOC
+                    or a_stub.tag == Tag.VEHICLEMINSOC
+                    or a_stub.tag == Tag.VEHICLELIMITSOC
+                    or a_stub.tag == Tag.VEHICLEPLANSOC
+                )
 
                 # only when the json_idx has a length of 1 we must patch our key & translation_key
                 patch_keys = a_stub.json_idx is not None and len(a_stub.json_idx) == 1
@@ -89,31 +94,40 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
                 description = ExtSensorEntityDescription(
                     tag=a_stub.tag,
                     lp_idx=lp_api_index,
-                    key=f"{lp_id_addon}_{a_stub.tag.key}" if not patch_keys else f"{lp_id_addon}_{a_stub.tag.key}_{a_stub.json_idx[0]}",
-                    translation_key=a_stub.tag.key if not patch_keys else f"{a_stub.tag.key}_{a_stub.json_idx[0]}",
+                    key=f"{lp_id_addon}_{a_stub.tag.key}"
+                    if not patch_keys
+                    else f"{lp_id_addon}_{a_stub.tag.key}_{a_stub.json_idx[0]}",
+                    translation_key=a_stub.tag.key
+                    if not patch_keys
+                    else f"{a_stub.tag.key}_{a_stub.json_idx[0]}",
                     name_addon=lp_name_addon if multi_loadpoint_config else None,
                     icon=a_stub.icon,
                     device_class=SensorDeviceClass.TEMPERATURE if force_celsius else a_stub.device_class,
-                    unit_of_measurement=UnitOfTemperature.CELSIUS if force_celsius else a_stub.unit_of_measurement,
+                    unit_of_measurement=(
+                        UnitOfTemperature.CELSIUS if force_celsius else a_stub.unit_of_measurement
+                    ),
                     entity_category=a_stub.entity_category,
                     entity_registry_enabled_default=a_stub.entity_registry_enabled_default,
-
                     # the entity type specific values...
                     state_class=a_stub.state_class,
-                    native_unit_of_measurement=UnitOfTemperature.CELSIUS if force_celsius else a_stub.native_unit_of_measurement,
+                    native_unit_of_measurement=(
+                        UnitOfTemperature.CELSIUS
+                        if force_celsius
+                        else a_stub.native_unit_of_measurement
+                    ),
                     suggested_display_precision=a_stub.suggested_display_precision,
                     json_idx=a_stub.json_idx,
                     factor=a_stub.factor,
                     lookup=a_stub.lookup,
-                    ignore_zero=a_stub.ignore_zero
+                    ignore_zero=a_stub.ignore_zero,
                 )
 
                 # if it's a lookup value, we just patch the translation key...
                 if a_stub.lookup is not None:
                     description = replace(
                         description,
-                        key = f"{description.key}_value",
-                        translation_key = f"{description.translation_key}_value"
+                        key=f"{description.key}_value",
+                        translation_key=f"{description.translation_key}_value",
                     )
 
                 # for charging session sensor we must patch some additional stuff...
@@ -121,9 +135,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
                     if a_stub.tag.entity_key is not None:
                         description = replace(
                             description,
-                            key = f"cstotal_{description.key}",
-                            translation_key = a_stub.tag.entity_key,
-                            name_addon = lp_name_addon if multi_loadpoint_config else None,
+                            key=f"cstotal_{description.key}",
+                            translation_key=a_stub.tag.entity_key,
+                            name_addon=lp_name_addon if multi_loadpoint_config else None,
                         )
 
                 entity = EvccSensor(coordinator, description)
@@ -141,15 +155,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
             description = ExtSensorEntityDescription(
                 tag=a_stub.tag,
-                key=f"{veh_id_addon}_{a_stub.tag.key}" if not patch_keys else f"{veh_id_addon}_{a_stub.tag.key}_{a_stub.json_idx[0]}",
-                translation_key=a_stub.tag.key if not patch_keys else f"{a_stub.tag.key}_{a_stub.json_idx[0]}",
+                key=f"{veh_id_addon}_{a_stub.tag.key}"
+                if not patch_keys
+                else f"{veh_id_addon}_{a_stub.tag.key}_{a_stub.json_idx[0]}",
+                translation_key=a_stub.tag.key
+                if not patch_keys
+                else f"{a_stub.tag.key}_{a_stub.json_idx[0]}",
                 name_addon=veh_name_addon if multi_loadpoint_config else None,
                 icon=a_stub.icon,
                 device_class=a_stub.device_class,
                 unit_of_measurement=a_stub.unit_of_measurement,
                 entity_category=a_stub.entity_category,
                 entity_registry_enabled_default=a_stub.entity_registry_enabled_default,
-
                 # the entity type specific values...
                 state_class=a_stub.state_class,
                 native_unit_of_measurement=a_stub.native_unit_of_measurement,
@@ -157,15 +174,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
                 json_idx=a_stub.json_idx,
                 factor=a_stub.factor,
                 lookup=a_stub.lookup,
-                ignore_zero=a_stub.ignore_zero
+                ignore_zero=a_stub.ignore_zero,
             )
 
             # if it's a lookup value, we just patch the translation key...
             if a_stub.lookup is not None:
                 description = replace(
                     description,
-                    key = f"{description.key}_value",
-                    translation_key = f"{description.translation_key}_value"
+                    key=f"{description.key}_value",
+                    translation_key=f"{description.translation_key}_value",
                 )
 
             # for charging session sensor we must patch some additional stuff...
@@ -173,9 +190,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
                 if a_stub.tag.entity_key is not None:
                     description = replace(
                         description,
-                        key = f"cstotal_{description.key}",
-                        translation_key = a_stub.tag.entity_key,
-                        name_addon = veh_name_addon
+                        key=f"cstotal_{description.key}",
+                        translation_key=a_stub.tag.entity_key,
+                        name_addon=veh_name_addon,
                     )
 
             entity = EvccSensor(coordinator, description)
@@ -185,10 +202,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
 
 class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
-    def __init__(self, coordinator: EvccDataUpdateCoordinator, description: ExtSensorEntityDescription):
+    def __init__(
+        self,
+        coordinator: EvccDataUpdateCoordinator,
+        description: ExtSensorEntityDescription,
+    ):
         super().__init__(coordinator=coordinator, description=description)
         self._previous_float_value: float | None = None
-        if self.tag.type == EP_TYPE.TARIFF or self.tag == Tag.FORECAST_GRID or self.tag == Tag.FORECAST_SOLAR:
+        if (
+            self.tag.type == EP_TYPE.TARIFF
+            or self.tag == Tag.FORECAST_GRID
+            or self.tag == Tag.FORECAST_SOLAR
+        ):
             self._last_calculated_key = None
             self._last_calculated_value = None
 
@@ -204,13 +229,26 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
             if a_dict is not None and "rates" in a_dict:
                 a_array = a_dict["rates"]
                 if a_array is not None:
-                    a_array_without_end_values = [
-                        {
-                            "start_utc": int(datetime.fromisoformat(entry["start"]).timestamp()),
-                            "value": round(entry["value"], 4) if not float(entry["value"]).is_integer() else entry["value"],
-                        }
-                        for entry in a_array
-                    ]
+                    a_array_without_end_values = []
+                    for entry in a_array:
+                        try:
+                            start_utc = int(
+                                datetime.fromisoformat(entry["start"]).timestamp()
+                            )
+                            value = float(entry["value"])
+                            value = (
+                                round(value, 4)
+                                if not value.is_integer()
+                                else value
+                            )
+                            a_array_without_end_values.append(
+                                {
+                                    "start_utc": start_utc,
+                                    "value": value,
+                                }
+                            )
+                        except (KeyError, TypeError, ValueError):
+                            continue
                     return {"rates": a_array_without_end_values}
                 else:
                     return a_dict
@@ -220,24 +258,45 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
         elif self.tag == Tag.FORECAST_GRID or self.tag == Tag.FORECAST_SOLAR:
             data = self.coordinator.read_tag(self.tag)
             if data is not None:
-                if self.tag == Tag.FORECAST_GRID and FORECAST_CONTENT.GRID.value in data:
+                if (
+                    self.tag == Tag.FORECAST_GRID
+                    and FORECAST_CONTENT.GRID.value in data
+                ):
                     # thanks - with the extension to 1/4 h forcast data the content of evcc
                     # is no longer storable in HA database (exceed maximum size of 16384 bytes)
                     # so as workaround we throw away all 'end' values...
                     a_array = data[FORECAST_CONTENT.GRID.value]
                     if a_array is not None:
-                        a_array_without_end_values = [
-                            {
-                                "start_utc": int(datetime.fromisoformat(entry["start"]).timestamp()),
-                                "value": round(entry["value"], 4) if not float(entry["value"]).is_integer() else entry["value"],
-                            }
-                            for entry in a_array
-                        ]
+                        a_array_without_end_values = []
+                        for entry in a_array:
+                            try:
+                                start_utc = int(
+                                    datetime.fromisoformat(
+                                        entry["start"]
+                                    ).timestamp()
+                                )
+                                value = float(entry["value"])
+                                value = (
+                                    round(value, 4)
+                                    if not value.is_integer()
+                                    else value
+                                )
+                                a_array_without_end_values.append(
+                                    {
+                                        "start_utc": start_utc,
+                                        "value": value,
+                                    }
+                                )
+                            except (KeyError, TypeError, ValueError):
+                                continue
                         return {"rates": a_array_without_end_values}
                     else:
                         return {"rates": a_array}
 
-                elif self.tag == Tag.FORECAST_SOLAR and FORECAST_CONTENT.SOLAR.value in data:
+                elif (
+                    self.tag == Tag.FORECAST_SOLAR
+                    and FORECAST_CONTENT.SOLAR.value in data
+                ):
                     # wow - these are real vales from the evcc API:
                     # "val": 102.91332846080002
                     # how fucking useless this can be? We need even more precision...
@@ -246,37 +305,60 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
                     a_object = data[FORECAST_CONTENT.SOLAR.value]
                     if "timeseries" in a_object:
                         a_array = a_object["timeseries"]
-                        if a_array is not None and "ts" in a_array[0]:
-                            rounded_array = [
-                                {
-                                    "ts_utc": int(datetime.fromisoformat(entry["ts"]).timestamp()),
-                                    "val": round(entry["val"], 4) if not float(entry["val"]).is_integer() else entry["val"],
-                                }
-                                for entry in a_array
-                            ]
-                            a_object["timeseries"] = rounded_array
-                        else:
-                            # we have already rounded the data ?!
-                            pass
+                        # Hardening: make sure we have a proper non-empty list
+                        if isinstance(a_array, list) and len(a_array) > 0:
+                            rounded_array = []
+                            for entry in a_array:
+                                try:
+                                    ts_raw = entry.get("ts")
+                                    val_raw = entry.get("val")
+                                    if ts_raw is None or val_raw is None:
+                                        continue
+                                    ts_dt = datetime.fromisoformat(ts_raw)
+                                    ts_utc = int(ts_dt.timestamp())
+                                    val_float = float(val_raw)
+                                    val_rounded = (
+                                        round(val_float, 4)
+                                        if not val_float.is_integer()
+                                        else val_float
+                                    )
+                                    rounded_array.append(
+                                        {
+                                            "ts_utc": ts_utc,
+                                            "val": val_rounded,
+                                        }
+                                    )
+                                except (TypeError, ValueError):
+                                    continue
+                            if rounded_array:
+                                a_object["timeseries"] = rounded_array
+                        # if list is empty or malformed, we simply leave object as-is
 
                     return a_object
 
-            #if self.tag == Tag.FORCAST_SOLAR and "timeseries" in data:
+            # if self.tag == Tag.FORCAST_SOLAR and "timeseries" in data:
             #    data = data["timeseries"]
-            #_LOGGER.error(f"ATTR: {self.tag} - {data}")
-            #return data
+            # _LOGGER.error(f"ATTR: {self.tag} - {data}")
+            # return data
         return None
 
     def get_current_value_from_timeseries(self, data_list):
         if data_list is not None:
             current_time = datetime.now(timezone.utc)
-            a_key = f"{current_time.hour}_{int(current_time.minute/15) if current_time.minute > 0 else 0}"
+            a_key = (
+                f"{current_time.hour}_"
+                f"{int(current_time.minute/15) if current_time.minute > 0 else 0}"
+            )
             if a_key != self._last_calculated_key:
                 self._last_calculated_key = a_key
                 for a_entry in data_list:
                     if "start" in a_entry and "end" in a_entry:
-                        start_dt = datetime.fromisoformat(a_entry["start"]).astimezone(timezone.utc)
-                        end_dt = datetime.fromisoformat(a_entry["end"]).astimezone(timezone.utc)
+                        start_dt = datetime.fromisoformat(
+                            a_entry["start"]
+                        ).astimezone(timezone.utc)
+                        end_dt = datetime.fromisoformat(
+                            a_entry["end"]
+                        ).astimezone(timezone.utc)
                         if start_dt < current_time < end_dt:
                             if "value" in a_entry:
                                 self._last_calculated_value = a_entry["value"]
@@ -287,13 +369,19 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
 
                     elif "ts" in a_entry or "ts_utc" in a_entry:
                         if "ts_utc" in a_entry:
-                            timestamp_dt = datetime.fromtimestamp(a_entry["ts_utc"], tz=timezone.utc)
+                            timestamp_dt = datetime.fromtimestamp(
+                                a_entry["ts_utc"], tz=timezone.utc
+                            )
                         else:
-                            timestamp_dt = datetime.fromisoformat(a_entry["ts"]).astimezone(timezone.utc)
+                            timestamp_dt = datetime.fromisoformat(
+                                a_entry["ts"]
+                            ).astimezone(timezone.utc)
 
-                        if (timestamp_dt.day == current_time.day and
-                            timestamp_dt.hour == current_time.hour and
-                            int(timestamp_dt.minute / 15) == int(current_time.minute / 15)
+                        if (
+                            timestamp_dt.day == current_time.day
+                            and timestamp_dt.hour == current_time.hour
+                            and int(timestamp_dt.minute / 15)
+                            == int(current_time.minute / 15)
                         ):
                             if "val" in a_entry:
                                 self._last_calculated_value = a_entry["val"]
@@ -303,6 +391,7 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
                                 break
                             elif "price" in a_entry:
                                 self._last_calculated_value = a_entry["price"]
+                                break
             return self._last_calculated_value
         return None
 
@@ -310,7 +399,9 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
     def native_value(self):
         """Return the state of the sensor."""
         if self.tag.type == EP_TYPE.SESSIONS:
-            attr_data = self.coordinator.read_tag_sessions(self.tag, self._attr_name_addon)
+            attr_data = self.coordinator.read_tag_sessions(
+                self.tag, self._attr_name_addon
+            )
             if attr_data is not None:
                 if isinstance(attr_data, (dict, list)):
                     if SESSIONS_KEY_TOTAL in attr_data:
@@ -332,27 +423,36 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
                 else:
                     return None
             else:
-                _LOGGER.debug(f"no tariff data found for {self.tag}")
+                _LOGGER.debug("no tariff data found for %s", self.tag)
                 return None
+
+        value = None
         try:
             value = self.coordinator.read_tag(self.tag, self.lp_idx)
-            if hasattr(self.entity_description, "json_idx") and self.entity_description.json_idx is not None:
+            if (
+                hasattr(self.entity_description, "json_idx")
+                and self.entity_description.json_idx is not None
+            ):
                 json_keys_len = len(self.entity_description.json_idx)
                 # for sure this could be also done in loop... but this code is IMHO readable...
                 if json_keys_len > 0:
                     json_idx1 = self.entity_description.json_idx[0]
                     try:
                         value = value[json_idx1]
-                    except (IndexError, KeyError):
-                        _LOGGER.debug(f"index1 {json_idx1} not found in {value}")
+                    except (IndexError, KeyError, TypeError):
+                        _LOGGER.debug(
+                            "index1 %s not found in %s", json_idx1, value
+                        )
                         value = None
 
                 if json_keys_len > 1:
                     json_idx2 = self.entity_description.json_idx[1]
                     try:
                         value = value[json_idx2]
-                    except (IndexError, KeyError):
-                        _LOGGER.debug(f"index2 {json_idx2} not found in {value}")
+                    except (IndexError, KeyError, TypeError):
+                        _LOGGER.debug(
+                            "index2 %s not found in %s", json_idx2, value
+                        )
                         value = None
 
             if isinstance(value, (dict, list)):
@@ -360,7 +460,9 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
                     value = self.get_current_value_from_timeseries(value)
                 elif self.tag == Tag.FORECAST_SOLAR:
                     if "timeseries" in value:
-                        value = self.get_current_value_from_timeseries(value["timeseries"])
+                        value = self.get_current_value_from_timeseries(
+                            value["timeseries"]
+                        )
                     elif "today" in value and "energy" in value["today"]:
                         value = value["today"]["energy"]
                     else:
@@ -375,9 +477,13 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
             else:
                 if self.entity_description.lookup is not None:
                     if self.tag.key.lower() in self.coordinator.lang_map:
-                        value = self.coordinator.lang_map[self.tag.key.lower()][value]
+                        value = self.coordinator.lang_map[
+                            self.tag.key.lower()
+                        ][value]
                     else:
-                        _LOGGER.warning(f"{self.tag.key} not found in translations")
+                        _LOGGER.warning(
+                            "%s not found in translations", self.tag.key
+                        )
                 elif isinstance(value, bool):
                     if value is True:
                         value = "on"
@@ -387,12 +493,26 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
                     # self.entity_description.lookup values are always 'strings' - so there we should not
                     # have an additional 'factor'
                     if self.entity_description.factor is not None:
-                        value = float(value)/self.entity_description.factor
+                        try:
+                            value = float(value) / self.entity_description.factor
+                        except (TypeError, ValueError):
+                            _LOGGER.debug(
+                                "failed to apply factor %s to value '%s' for %s",
+                                self.entity_description.factor,
+                                value,
+                                self._attr_translation_key,
+                            )
+                            value = None
 
         except (IndexError, ValueError, TypeError, KeyError) as err:
-            _LOGGER.debug(f"tag: {self.tag} (lp_idx: '{self.lp_idx}') (value: '{value}') caused {err}")
+            _LOGGER.debug(
+                "tag: %s (lp_idx: '%s') (value: '%s') caused %s",
+                self.tag,
+                self.lp_idx,
+                value,
+                err,
+            )
             value = None
-
 
         # a fallback, if there is no LP_VEHICLELIMITSOC set at the loadpoint
         if self.tag == Tag.LP_VEHICLELIMITSOC and (value is None or value == 0):
@@ -405,21 +525,56 @@ class EvccSensor(EvccBaseEntity, SensorEntity, RestoreEntity):
                 if self._previous_float_value is not None:
                     return self._previous_float_value
             else:
-                a_float_value = float(value)
-                if self._previous_float_value is not None and a_float_value < self._previous_float_value:
-                    _LOGGER.debug(f"prev>new for key {self._attr_translation_key} [prev: '{self._previous_float_value}' new: '{a_float_value}']")
-                    return self._previous_float_value
+                try:
+                    a_float_value = float(value)
+                except (TypeError, ValueError):
+                    _LOGGER.debug(
+                        "failed to convert value '%s' for %s to float in CHARGETOTALIMPORT",
+                        value,
+                        self._attr_translation_key,
+                    )
                 else:
+                    if (
+                        self._previous_float_value is not None
+                        and a_float_value < self._previous_float_value
+                    ):
+                        _LOGGER.debug(
+                            "prev>new for key %s [prev: '%s' new: '%s']",
+                            self._attr_translation_key,
+                            self._previous_float_value,
+                            a_float_value,
+                        )
+                        return self._previous_float_value
                     self._previous_float_value = a_float_value
 
         # make sure that we only return values > 0
         if self.entity_description.ignore_zero:
-            isZeroVal = value is None or value == "unknown" or value <= 0.1
+            # Normalize value and determine if it is effectively zero/invalid
+            is_zero_val = False
+            numeric_value: float | None = None
 
-            if isZeroVal and self._previous_float_value is not None and self._previous_float_value > 0:
-                value = self._previous_float_value
-            elif value > 0:
-                self._previous_float_value = value
+            if value is None or value == "unknown":
+                is_zero_val = True
+            else:
+                try:
+                    numeric_value = float(value)
+                    is_zero_val = numeric_value <= 0.1
+                except (TypeError, ValueError):
+                    is_zero_val = True
+                    numeric_value = None
+                    value = None
+
+            if is_zero_val:
+                # If current value is zero-ish but we have a previous positive value, reuse it
+                if (
+                    self._previous_float_value is not None
+                    and self._previous_float_value > 0
+                ):
+                    value = self._previous_float_value
+            else:
+                # Update previous value only when we have a valid positive value
+                if numeric_value is not None and numeric_value > 0:
+                    self._previous_float_value = numeric_value
 
         # final return statement...
         return value
